@@ -1,6 +1,6 @@
 # 🍵 Assam Tourism Guide Agent
 
-An AI-powered tourism assistant for Assam, India — built with **Google ADK** and connected to **Google Maps via MCP (Model Context Protocol)**. Deployed on **Google Cloud Run**.
+An AI-powered tourism assistant for Assam, India — built with **Google ADK** and connected to **Google Search via MCP (Model Context Protocol)**. Deployed on **Google Cloud Run**.
 
 ## 🗺️ What It Does
 
@@ -10,27 +10,29 @@ Users can ask questions like:
 - *"Plan a trip from Guwahati to Majuli"*
 - *"Best tea gardens to visit near Jorhat?"*
 
-The agent fetches **live data from Google Maps** via an MCP server and generates a rich, grounded travel guide response.
+The agent fetches **live data from Google Search** via MCP and generates a rich, grounded travel guide response.
 
 ## 🏗️ Architecture
 
 ```
 User → ADK Agent (Cloud Run)
-           ↓  MCP (SSE)
-     Google Maps MCP Server (Cloud Run)
+           ↓  MCP
+     Google Search Tool
            ↓
-     Google Maps Places API
+     Real-time Web Data (via Vertex AI)
 ```
 
 ## 📁 Project Structure
 
 ```
 assam-tourism-agent/
-├── agent.py          # ADK agent definition
-├── main.py           # FastAPI entrypoint
-├── requirements.txt  # Python dependencies
-├── Dockerfile        # Container config
-├── .env.example      # Environment variable template
+├── assam_tourism_agent/
+│   ├── agent.py          # ADK agent definition
+│   └── __init__.py       # Module init
+├── main.py               # FastAPI entrypoint
+├── requirements.txt      # Python dependencies
+├── Dockerfile            # Container config
+├── .env.example          # Environment variable template
 └── README.md
 ```
 
@@ -38,47 +40,36 @@ assam-tourism-agent/
 
 ### Prerequisites
 - Google Cloud project with billing enabled
-- Google Maps API key
-- Maps MCP server deployed (from Codelab 1)
+- Vertex AI API enabled
 - `gcloud` CLI installed and authenticated
 
 ### Step 1: Clone & Configure
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/leo-leo-691/assam-tourism-agent.git
 cd assam-tourism-agent
 cp .env.example .env
 # Fill in your values in .env
 ```
 
-### Step 2: Run Locally
+### Step 2: Enable Vertex AI API
 
 ```bash
-pip install -r requirements.txt
-source .env  # or set env vars manually
-adk web      # starts local dev server
+gcloud services enable aiplatform.googleapis.com --project YOUR_PROJECT_ID
 ```
-
-Visit `http://localhost:8000` and start chatting!
 
 ### Step 3: Deploy to Cloud Run
 
 ```bash
-# Set your project
 export PROJECT_ID=your_gcp_project_id
 export REGION=us-central1
 
-# Build and push container
-gcloud builds submit --tag gcr.io/$PROJECT_ID/assam-tourism-agent
-
-# Deploy to Cloud Run
 gcloud run deploy assam-tourism-agent \
-  --image gcr.io/$PROJECT_ID/assam-tourism-agent \
-  --platform managed \
+  --source . \
   --region $REGION \
   --allow-unauthenticated \
-  --set-env-vars GOOGLE_API_KEY=your_key,MAPS_MCP_URL=your_mcp_url \
-  --port 8080
+  --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=us-central1,GOOGLE_GENAI_USE_VERTEXAI=TRUE \
+  --project $PROJECT_ID
 ```
 
 ### Step 4: Get Your Cloud Run URL
@@ -88,15 +79,13 @@ After deployment, you'll get a URL like:
 https://assam-tourism-agent-xxxxxxxx-uc.a.run.app
 ```
 
-Use this as your **submission link**.
-
 ## 🔑 Environment Variables
 
 | Variable | Description |
 |---|---|
-| `GOOGLE_API_KEY` | Gemini API key for ADK |
-| `MAPS_MCP_URL` | URL of your deployed Maps MCP server (SSE endpoint) |
 | `GOOGLE_CLOUD_PROJECT` | Your GCP project ID |
+| `GOOGLE_CLOUD_LOCATION` | GCP region (e.g. us-central1) |
+| `GOOGLE_GENAI_USE_VERTEXAI` | Set to TRUE to use Vertex AI |
 
 ## 🧪 Example Queries
 
@@ -106,12 +95,18 @@ Use this as your **submission link**.
 - "Tea garden experiences near Dibrugarh"
 - "How to get to Kaziranga from Jorhat?"
 
+## 🌐 Live Demo
+
+```
+https://assam-tourism-agent-882158419848.us-central1.run.app
+```
+
 ## 📌 Tech Stack
 
 - **Google ADK** — Agent framework
 - **MCP (Model Context Protocol)** — Tool integration standard
-- **Google Maps Places API** — Live location data
-- **Gemini 2.0 Flash** — LLM
+- **Google Search Tool** — Real-time web data retrieval
+- **Gemini 2.5 Flash (Vertex AI)** — LLM
 - **FastAPI + Uvicorn** — Web server
 - **Google Cloud Run** — Serverless deployment
 
