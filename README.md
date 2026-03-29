@@ -112,4 +112,4 @@ https://assam-tourism-agent-882158419848.us-central1.run.app
 
 ## 🙏 Credits
 
-Built as part of the Google ADK + MCP hackathon/workshop track.
+Built as part of the Google Gen AI Academy APAC Edition 2026
