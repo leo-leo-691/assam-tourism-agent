@@ -1,6 +1,7 @@
 import os
 from google.adk.agents import Agent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams
+from google.adk.tools.mcp_tool import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import SseConnectionParams
 
 AGENT_INSTRUCTION = """
 You are an Assam Tourism Guide — a knowledgeable and friendly assistant 
@@ -17,19 +18,18 @@ You cover all of Assam — including Kaziranga, Majuli, Jorhat, Guwahati,
 Sivasagar, Tezpur, Dibrugarh, and other destinations.
 """
 
-def create_agent():
-    maps_mcp_url = os.environ.get("MAPS_MCP_URL", "http://localhost:3000/sse")
+maps_api_key = os.environ.get("MAPS_API_KEY", "")
 
-    toolset = MCPToolset(
-        connection_params=SseServerParams(url=maps_mcp_url)
+toolset = MCPToolset(
+    connection_params=SseConnectionParams(
+        url="https://mapstools.googleapis.com/mcp",
+        headers={"X-Goog-Api-Key": maps_api_key}
     )
+)
 
-    agent = Agent(
-        model="gemini-2.0-flash",
-        name="assam_tourism_agent",
-        instruction=AGENT_INSTRUCTION,
-        tools=[toolset],
-    )
-    return agent
-
-root_agent = create_agent()
+root_agent = Agent(
+    model="gemini-2.0-flash",
+    name="assam_tourism_agent",
+    instruction=AGENT_INSTRUCTION,
+    tools=[toolset],
+)
